@@ -9,56 +9,71 @@ arcpy.env.overwriteOutput = True
 
 
 class Fifteen:
-    
-    def __init__(self):
-        
-        interval = 15
-        sr =  arcpy.SpatialReference(32639)
 
-    
-    def raft(self,memorypoint_raft,memoryline_raft):
+    interval = 15
+    sr = arcpy.SpatialReference(32639)
+
+    def __init__(self,memorypoint_raft,memoryline_raft):
 
         self.memorypoint_raft = memorypoint_raft
         self.memoryline_raft = memoryline_raft
 
-        if str(checkboxRaft) == "true":
-  
-            arcpy.CreateFeatureclass_management(output,pointRaft,"POINT",spatial_reference=sr)
-            memorypoint_raft = arcpy.CopyFeatures_management(pointRaft,"in_memory/pointRaft")
-            memoryline_raft = arcpy.CopyFeatures_management(LineRaft,"in_memory/lineRaft")
+
+
+
+    if str(checkboxRaft) == "true":
+
+        def raft(self):
+
+
+            arcpy.CreateFeatureclass_management(output,pointRaft,"POINT",spatial_reference= self.sr)
+            self.memorypoint_raft = arcpy.CopyFeatures_management(pointRaft,"in_memory/pointRaft")
+            self.memoryline_raft = arcpy.CopyFeatures_management(LineRaft,"in_memory/lineRaft")
 
             # Add fields
             fieldprop = {"X":"DOUBLE", "Y":"DOUBLE","Point_Row":"SHORT","KM":"DOUBLE"}
             for item in fieldprop.items():
-                arcpy.AddField_management(memorypoint_raft,item[0],item[1])
+                arcpy.AddField_management(self.memorypoint_raft,item[0],item[1])
 
 
-            insertCursor = arcpy.da.InsertCursor(memorypoint_raft, ["SHAPE@XY"]) # this is the pre-existing pt feature class
-            with arcpy.da.SearchCursor(memoryline_raft, ['OID@','SHAPE@']) as searchCursor: # this is the line feature on which the pointRafts will be based
+
+class SearchCursor(Fifteen):
+
+    def __init__(self,memorypoint_raft,memoryline_raft,len_line):
+
+        super().__init__(memorypoint_raft,memoryline_raft)
+
+        self.len_line = len_line
+
+        def searchcursor(self):
+
+            insert_cursor = arcpy.da.InsertCursor(self.memorypoint_raft, ["SHAPE@XY"])  # this is the pre-existing pt feature class
+
+            with arcpy.da.SearchCursor(self.memoryline_raft, ['OID@','SHAPE@']) as searchCursor: # this is the line feature on which the pointRafts will be based
                 for row in searchCursor:
-                    lengthLine = row[1].length # grab the length of the line feature, i'm using round() here to avoid weird rounding errors that prevent the numberOfPositions from being determined
-                    if lengthLine % interval == 0:
-                        numberOfPositions = int(lengthLine // interval) - 1
-                    else:
-                        numberOfPositions = int(lengthLine // interval)
-                        if numberOfPositions >= 0:
-                            distancezero = 0
-                            xPoint = row[1].positionAlongLine(distancezero).firstPoint.X
-                            yPoint = row[1].positionAlongLine(distancezero).firstPoint.Y
-                            xy = (xPoint, yPoint)
-                            insertCursor.insertRow([xy])
-                            for i in range(numberOfPositions):
-                                distance = (i + 1) * interval
-                                xPoint = row[1].positionAlongLine(distance).firstPoint.X
-                                yPoint = row[1].positionAlongLine(distance).firstPoint.Y
-                                xy = (xPoint, yPoint)
-                                insertCursor.insertRow([xy])
-                            distanceend = lengthLine
-                            xPoint = row[1].positionAlongLine(lengthLine).firstPoint.X
-                            yPoint = row[1].positionAlongLine(lengthLine).firstPoint.Y
-                            xy = (xPoint, yPoint)
-                            insertCursor.insertRow([xy])
-                        del insertCursor
+                    self.len_line= row[1].length # grab the length of the line feature, i'm using round() here to avoid weird rounding errors that prevent the numberOfPositions from being determined
+                if self.lengthLine % self.interval == 0:
+                    return int(self.len_line // self.interval) - 1
+
+                elif int(self.len_line // self.interval) >=0:
+                    numberOfPositions = int(len_line // self.interval)
+                    distancezero = 0
+                    xPoint = row[1].positionAlongLine(distancezero).firstPoint.X
+                    yPoint = row[1].positionAlongLine(distancezero).firstPoint.Y
+                    xy = (xPoint, yPoint)
+                    insert_cursor.insertRow([xy])
+                    for i in range(numberOfPositions):
+                        distance = (i + 1) * self.interval
+                        xPoint = row[1].positionAlongLine(distance).firstPoint.X
+                        yPoint = row[1].positionAlongLine(distance).firstPoint.Y
+                        xy = (xPoint, yPoint)
+                        insert_cursor.insertRow([xy])
+                    distanceend = lengthLine
+                    xPoint = row[1].positionAlongLine(lengthLine).firstPoint.X
+                    yPoint = row[1].positionAlongLine(lengthLine).firstPoint.Y
+                    xy = (xPoint, yPoint)
+                    insertCursor.insertRow([xy])
+                del insertCursor
             count = arcpy.GetCount_management(memorypoint_raft).getOutput(0)
     
             lastRow = int(count)

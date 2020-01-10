@@ -10,11 +10,11 @@ arcpy.env.overwriteOutput = True
 interval = 15
 sr = arcpy.SpatialReference(32639)
 
-def raft():
+
 if str(checkboxRaft) == "true":
 
-        interval = 15
-        sr = arcpy.SpatialReference(32639)
+    def raft():
+
         arcpy.CreateFeatureclass_management(output,pointRaft,"POINT",spatial_reference=sr)
         memorypointRaft=arcpy.CopyFeatures_management(pointRaft,"in_memory/pointRaft")
         memorylineRaft=arcpy.CopyFeatures_management(LineRaft,"in_memory/lineRaft")
